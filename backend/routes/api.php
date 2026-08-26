@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DoorCheckInController;
 use App\Http\Controllers\GymAccountController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\OccupancyController;
+use App\Http\Controllers\OccupancyHeatmapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -13,6 +15,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/gym/occupancy', [OccupancyController::class, 'show']);
+    Route::get('/gym/occupancy/heatmap', [OccupancyHeatmapController::class, 'show']);
 
     Route::middleware('role:member')->group(function () {
         Route::post('/checkins/door/{token}', [DoorCheckInController::class, 'store']);

@@ -107,3 +107,24 @@ export async function checkInMemberManually(token: string, userId: number): Prom
   )
   return data
 }
+
+export async function fetchOccupancy(token: string): Promise<number> {
+  const { count } = await request<{ count: number }>('/gym/occupancy', {}, token)
+  return count
+}
+
+export type OccupancyHeatmapBucket = {
+  day_of_week: number
+  hour: number
+  count: number
+}
+
+export type OccupancyHeatmap = {
+  data: OccupancyHeatmapBucket[]
+  busiest: OccupancyHeatmapBucket | null
+  quietest: OccupancyHeatmapBucket | null
+}
+
+export function fetchOccupancyHeatmap(token: string): Promise<OccupancyHeatmap> {
+  return request<OccupancyHeatmap>('/gym/occupancy/heatmap', {}, token)
+}
