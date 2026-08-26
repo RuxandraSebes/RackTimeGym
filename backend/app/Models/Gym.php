@@ -31,4 +31,9 @@ class Gym extends Model
     {
         return $this->hasMany(CheckIn::class);
     }
+
+    public function equipmentUnits(): HasMany
+    {
+        return $this->hasMany(EquipmentUnit::class);
+    }
 }

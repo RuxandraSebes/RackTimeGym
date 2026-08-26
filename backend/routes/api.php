@@ -5,11 +5,14 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClassCheckInController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DoorCheckInController;
+use App\Http\Controllers\EquipmentCheckInController;
+use App\Http\Controllers\EquipmentUnitController;
 use App\Http\Controllers\GymAccountController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\OccupancyController;
 use App\Http\Controllers\OccupancyHeatmapController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\WaitlistEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,15 +26,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gym/occupancy', [OccupancyController::class, 'show']);
     Route::get('/gym/occupancy/heatmap', [OccupancyHeatmapController::class, 'show']);
     Route::get('/classes', [ClassController::class, 'index']);
+    Route::get('/equipment-units', [EquipmentUnitController::class, 'index']);
 
     Route::middleware('role:member')->group(function () {
         Route::post('/checkins/door/{token}', [DoorCheckInController::class, 'store']);
         Route::post('/checkins/class/{token}', [ClassCheckInController::class, 'store']);
+        Route::post('/checkins/equipment/{token}', [EquipmentCheckInController::class, 'store']);
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/classes/{class}/bookings', [BookingController::class, 'store']);
         Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
         Route::get('/waitlist-entries', [WaitlistEntryController::class, 'index']);
         Route::post('/waitlist-entries/{waitlistEntry}/confirm', [WaitlistEntryController::class, 'confirm']);
+        Route::get('/reservations', [ReservationController::class, 'index']);
+        Route::post('/equipment-units/{equipmentUnit}/reservations', [ReservationController::class, 'store']);
     });
 
     Route::middleware('role:staff,owner')->group(function () {
@@ -46,5 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/classes/{class}/bookings', [BookingController::class, 'roster']);
         Route::post('/gym/users/{member}/reactivate', [MembershipController::class, 'reactivate']);
         Route::patch('/gym/users/{member}/cancellation-window', [MembershipController::class, 'updateCancellationWindow']);
+        Route::post('/equipment-units', [EquipmentUnitController::class, 'store']);
+        Route::get('/equipment-units/{equipmentUnit}/qr', [EquipmentUnitController::class, 'showQr']);
     });
 });

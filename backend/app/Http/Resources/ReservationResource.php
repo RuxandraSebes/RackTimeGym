@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CheckInResource extends JsonResource
+class ReservationResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -14,17 +14,17 @@ class CheckInResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'gym_id' => $this->gym_id,
-            'class_id' => $this->class_id,
+            'equipment_unit' => $this->whenLoaded('equipmentUnit', fn () => [
+                'id' => $this->equipmentUnit->id,
+                'name' => $this->equipmentUnit->name,
+            ]),
             'member' => $this->whenLoaded('member', fn () => [
                 'id' => $this->member->id,
                 'name' => $this->member->name,
             ]),
-            'equipment_unit' => $this->whenLoaded('equipmentUnit', fn () => $this->equipmentUnit ? [
-                'id' => $this->equipmentUnit->id,
-                'name' => $this->equipmentUnit->name,
-            ] : null),
-            'checked_in_at' => $this->created_at->toIso8601String(),
+            'starts_at' => $this->starts_at->toIso8601String(),
+            'ends_at' => $this->ends_at->toIso8601String(),
+            'confirmed_at' => $this->confirmed_at?->toIso8601String(),
         ];
     }
 }
