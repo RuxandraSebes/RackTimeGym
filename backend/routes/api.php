@@ -8,6 +8,7 @@ use App\Http\Controllers\GymAccountController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\OccupancyController;
 use App\Http\Controllers\OccupancyHeatmapController;
+use App\Http\Controllers\WaitlistEntryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -26,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/classes/{class}/bookings', [BookingController::class, 'store']);
         Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
+        Route::get('/waitlist-entries', [WaitlistEntryController::class, 'index']);
+        Route::post('/waitlist-entries/{waitlistEntry}/confirm', [WaitlistEntryController::class, 'confirm']);
     });
 
     Route::middleware('role:staff,owner')->group(function () {

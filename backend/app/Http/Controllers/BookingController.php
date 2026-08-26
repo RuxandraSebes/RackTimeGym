@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\BookingResource;
+use App\Http\Resources\WaitlistEntryResource;
 use App\Models\Booking;
 use App\Models\GymClass;
+use App\Models\WaitlistEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +24,11 @@ class BookingController extends Controller
         );
     }
 
-    public function store(Request $request, GymClass $class): BookingResource
+    public function store(Request $request, GymClass $class): BookingResource|WaitlistEntryResource
     {
         abort_unless($request->user()->gym_id === $class->gym_id, 403, 'This Class belongs to a different Gym.');
 
-        $booking = DB::transaction(function () use ($request, $class) {
+        $result = DB::transaction(function () use ($request, $class) {
             $class = GymClass::whereKey($class->id)->lockForUpdate()->firstOrFail();
 
             abort_if($class->cancelled_at !== null, 422, 'This Class has been cancelled.');
@@ -38,8 +40,30 @@ class BookingController extends Controller
                 ->exists();
             abort_if($alreadyBooked, 422, 'You already have a Booking for this Class.');
 
+            // Settle any lapsed offers first, so a stale one can't be mistaken for free
+            // capacity and handed to a new Member ahead of whoever is next in line.
+            $class->settleWaitlist();
+
             $activeBookings = Booking::where('class_id', $class->id)->whereNull('cancelled_at')->count();
-            abort_if($activeBookings >= $class->capacity, 422, 'This Class is at full capacity.');
+            $outstandingOffers = $class->activeWaitlistOffers()->count();
+
+            if ($activeBookings + $outstandingOffers >= $class->capacity) {
+                $alreadyWaitlisted = WaitlistEntry::where('class_id', $class->id)
+                    ->where('user_id', $request->user()->id)
+                    ->pending()
+                    ->exists();
+                abort_if($alreadyWaitlisted, 422, 'You are already on the Waitlist for this Class.');
+
+                return WaitlistEntry::create([
+                    'class_id' => $class->id,
+                    'user_id' => $request->user()->id,
+                ]);
+            }
+
+            WaitlistEntry::where('class_id', $class->id)
+                ->where('user_id', $request->user()->id)
+                ->whereNull('confirmed_at')
+                ->delete();
 
             return Booking::create([
                 'class_id' => $class->id,
@@ -47,7 +71,11 @@ class BookingController extends Controller
             ]);
         });
 
-        return new BookingResource($booking->load('gymClass'));
+        if ($result instanceof WaitlistEntry) {
+            return new WaitlistEntryResource($result->load('gymClass'));
+        }
+
+        return new BookingResource($result->load('gymClass'));
     }
 
     public function destroy(Request $request, Booking $booking): BookingResource
@@ -56,6 +84,7 @@ class BookingController extends Controller
         abort_if($booking->cancelled_at !== null, 422, 'This Booking has already been cancelled.');
 
         $booking->update(['cancelled_at' => now()]);
+        $booking->gymClass->settleWaitlist();
 
         return new BookingResource($booking->load('gymClass'));
     }

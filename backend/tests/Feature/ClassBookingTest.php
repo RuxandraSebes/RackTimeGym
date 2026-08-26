@@ -29,7 +29,7 @@ class ClassBookingTest extends TestCase
         ]);
     }
 
-    public function test_booking_a_class_at_full_capacity_is_rejected(): void
+    public function test_booking_a_class_at_full_capacity_joins_the_waitlist_instead_of_being_rejected(): void
     {
         $gym = Gym::factory()->create();
         $class = GymClass::factory()->for($gym)->create(['capacity' => 1]);
@@ -38,8 +38,12 @@ class ClassBookingTest extends TestCase
 
         $response = $this->actingAs($member, 'sanctum')->postJson("/api/classes/{$class->id}/bookings");
 
-        $response->assertUnprocessable();
+        $response->assertCreated();
         $this->assertDatabaseCount('bookings', 1);
+        $this->assertDatabaseHas('waitlist_entries', [
+            'class_id' => $class->id,
+            'user_id' => $member->id,
+        ]);
     }
 
     public function test_a_cancelled_booking_frees_up_the_capacity_slot_it_held(): void
