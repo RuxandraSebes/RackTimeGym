@@ -6,7 +6,8 @@ export function MemberLanding() {
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>
-          Check in at the door, book a Class, or reserve an Equipment Unit from here once those are live.
+          Scan the Door QR at the front desk to check in. Booking a Class or reserving an Equipment Unit will live
+          here once those are built.
         </CardDescription>
       </CardHeader>
     </Card>

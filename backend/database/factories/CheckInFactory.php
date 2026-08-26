@@ -2,14 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\CheckIn;
 use App\Models\Gym;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
- * @extends Factory<Gym>
+ * @extends Factory<CheckIn>
  */
-class GymFactory extends Factory
+class CheckInFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -19,8 +20,8 @@ class GymFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company().' Gym',
-            'door_qr_token' => Str::random(32),
+            'user_id' => User::factory()->member(),
+            'gym_id' => Gym::factory(),
         ];
     }
 }

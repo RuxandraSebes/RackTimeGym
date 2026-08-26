@@ -77,3 +77,33 @@ export async function createGymAccount(
   )
   return data
 }
+
+export type CheckIn = {
+  id: number
+  gym_id: number
+  member: { id: number; name: string }
+  checked_in_at: string
+}
+
+export async function fetchDoorQrToken(token: string): Promise<string> {
+  const { door_qr_token } = await request<{ door_qr_token: string }>('/gym/door-qr', {}, token)
+  return door_qr_token
+}
+
+export async function checkInAtDoor(token: string, doorQrToken: string): Promise<CheckIn> {
+  const { data } = await request<{ data: CheckIn }>(
+    `/checkins/door/${encodeURIComponent(doorQrToken)}`,
+    { method: 'POST' },
+    token,
+  )
+  return data
+}
+
+export async function checkInMemberManually(token: string, userId: number): Promise<CheckIn> {
+  const { data } = await request<{ data: CheckIn }>(
+    '/gym/checkins',
+    { method: 'POST', body: JSON.stringify({ user_id: userId }) },
+    token,
+  )
+  return data
+}

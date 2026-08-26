@@ -2,8 +2,11 @@ import { AppShell } from '@/components/AppShell'
 import { MemberLanding } from '@/components/dashboards/MemberLanding'
 import { OwnerLanding } from '@/components/dashboards/OwnerLanding'
 import { StaffLanding } from '@/components/dashboards/StaffLanding'
+import { DoorCheckInPage } from '@/components/DoorCheckInPage'
 import { LoginForm } from '@/components/LoginForm'
 import { AuthProvider, useAuth } from '@/lib/auth'
+
+const DOOR_CHECK_IN_PATH = /^\/checkin\/door\/([^/]+)$/
 
 function Landing({ role }: { role: 'member' | 'staff' | 'owner' }) {
   switch (role) {
@@ -35,9 +38,11 @@ function AppContent() {
 }
 
 function App() {
+  const doorCheckInMatch = window.location.pathname.match(DOOR_CHECK_IN_PATH)
+
   return (
     <AuthProvider>
-      <AppContent />
+      {doorCheckInMatch ? <DoorCheckInPage token={decodeURIComponent(doorCheckInMatch[1])} /> : <AppContent />}
     </AuthProvider>
   )
 }

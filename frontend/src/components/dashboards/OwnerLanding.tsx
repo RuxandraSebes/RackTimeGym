@@ -1,4 +1,6 @@
+import { DoorQrPanel } from '@/components/DoorQrPanel'
 import { GymAccountsPanel } from '@/components/GymAccountsPanel'
+import { ManualCheckInPanel } from '@/components/ManualCheckInPanel'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function OwnerLanding() {
@@ -7,11 +9,11 @@ export function OwnerLanding() {
       <Card className="max-w-md">
         <CardHeader>
           <CardTitle>Owner dashboard</CardTitle>
-          <CardDescription>
-            Gym-level configuration, Utilization, and Churn Signals will live here once those are built.
-          </CardDescription>
+          <CardDescription>Utilization and Churn Signals will live here once those are built.</CardDescription>
         </CardHeader>
       </Card>
+      <DoorQrPanel />
+      <ManualCheckInPanel />
       <GymAccountsPanel creatableRoles={['member', 'staff', 'owner']} />
     </div>
   )
