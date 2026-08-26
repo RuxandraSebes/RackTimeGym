@@ -15,6 +15,14 @@ function formatSlot(bucket: OccupancyHeatmapBucket): string {
   return `${DAY_LABELS[bucket.day_of_week]} ${formatHour(bucket.hour)}`
 }
 
+function describeExtreme(label: string, extreme: OccupancyHeatmapBucket, tiedCount: number): string {
+  const checkIns = `${extreme.count} check-in${extreme.count === 1 ? '' : 's'}`
+  if (tiedCount === 1) {
+    return `${label}: ${formatSlot(extreme)} (${checkIns})`
+  }
+  return `${label}: ${tiedCount} time slots tied at ${checkIns}`
+}
+
 export function OccupancyHeatmapPanel() {
   const { state } = useAuth()
   const token = state.phase === 'signed-in' ? state.token : null
@@ -32,6 +40,12 @@ export function OccupancyHeatmapPanel() {
 
   const byDayAndHour = new Map(heatmap?.data.map((bucket) => [`${bucket.day_of_week}-${bucket.hour}`, bucket]))
   const maxCount = heatmap ? Math.max(0, ...heatmap.data.map((bucket) => bucket.count)) : 0
+  const busiestTies = heatmap?.busiest
+    ? heatmap.data.filter((bucket) => bucket.count === heatmap.busiest?.count).length
+    : 0
+  const quietestTies = heatmap?.quietest
+    ? heatmap.data.filter((bucket) => bucket.count === heatmap.quietest?.count).length
+    : 0
 
   return (
     <Card className="max-w-3xl">
@@ -59,15 +73,13 @@ export function OccupancyHeatmapPanel() {
                       const bucket = byDayAndHour.get(`${dayOfWeek}-${hour}`)
                       const count = bucket?.count ?? 0
                       const intensity = maxCount === 0 ? 0 : count / maxCount
-                      const isBusiest = heatmap.busiest?.day_of_week === dayOfWeek && heatmap.busiest?.hour === hour
-                      const isQuietest =
-                        heatmap.quietest?.day_of_week === dayOfWeek && heatmap.quietest?.hour === hour
+                      const isBusiest = heatmap.busiest !== null && count === heatmap.busiest.count
 
                       return (
                         <div
                           key={`${dayOfWeek}-${hour}`}
                           title={`${DAY_LABELS[dayOfWeek]} ${formatHour(hour)}: ${count} check-in${count === 1 ? '' : 's'}`}
-                          className={`aspect-square rounded-sm ${isBusiest ? 'ring-2 ring-primary' : ''} ${isQuietest ? 'ring-1 ring-border' : ''}`}
+                          className={`aspect-square rounded-sm ${isBusiest ? 'ring-2 ring-primary' : ''}`}
                           style={{ backgroundColor: `oklch(0.6 0.15 250 / ${0.08 + intensity * 0.87})` }}
                         />
                       )
@@ -78,10 +90,8 @@ export function OccupancyHeatmapPanel() {
             </div>
             {heatmap.busiest && heatmap.quietest ? (
               <p className="text-muted-foreground text-sm">
-                Busiest: <span className="font-medium text-foreground">{formatSlot(heatmap.busiest)}</span> (
-                {heatmap.busiest.count} check-ins) · Quietest:{' '}
-                <span className="font-medium text-foreground">{formatSlot(heatmap.quietest)}</span> (
-                {heatmap.quietest.count} check-ins)
+                {describeExtreme('Busiest', heatmap.busiest, busiestTies)} ·{' '}
+                {describeExtreme('Quietest', heatmap.quietest, quietestTies)}
               </p>
             ) : (
               <p className="text-muted-foreground text-sm">No Door Check-ins yet.</p>
