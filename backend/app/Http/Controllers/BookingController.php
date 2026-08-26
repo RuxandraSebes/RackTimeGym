@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StrikeReason;
 use App\Http\Resources\BookingResource;
 use App\Http\Resources\WaitlistEntryResource;
 use App\Models\Booking;
@@ -27,6 +28,7 @@ class BookingController extends Controller
     public function store(Request $request, GymClass $class): BookingResource|WaitlistEntryResource
     {
         abort_unless($request->user()->gym_id === $class->gym_id, 403, 'This Class belongs to a different Gym.');
+        abort_if(! $request->user()->hasActiveMembership(), 403, 'This Membership is inactive.');
 
         $result = DB::transaction(function () use ($request, $class) {
             $class = GymClass::whereKey($class->id)->lockForUpdate()->firstOrFail();
@@ -81,10 +83,27 @@ class BookingController extends Controller
     public function destroy(Request $request, Booking $booking): BookingResource
     {
         abort_unless($booking->user_id === $request->user()->id, 403, 'This Booking belongs to a different Member.');
-        abort_if($booking->cancelled_at !== null, 422, 'This Booking has already been cancelled.');
 
-        $booking->update(['cancelled_at' => now()]);
-        $booking->gymClass->settleWaitlist();
+        $member = $request->user();
+
+        $booking = DB::transaction(function () use ($booking, $member) {
+            $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
+            abort_if($booking->cancelled_at !== null, 422, 'This Booking has already been cancelled.');
+
+            $class = $booking->gymClass;
+            $isLateCancellation = now()->greaterThanOrEqualTo($class->cancellationDeadlineFor($member));
+
+            $booking->update(['cancelled_at' => now()]);
+
+            if ($isLateCancellation) {
+                $member->recordStrike($booking, StrikeReason::LateCancellation);
+            }
+
+            $class->settleWaitlist();
+
+            return $booking;
+        });
 
         return new BookingResource($booking->load('gymClass'));
     }
@@ -92,6 +111,8 @@ class BookingController extends Controller
     public function roster(Request $request, GymClass $class): AnonymousResourceCollection
     {
         abort_unless($request->user()->gym_id === $class->gym_id, 403, 'This Class belongs to a different Gym.');
+
+        $class->settleNoShowStrikes();
 
         return BookingResource::collection(
             Booking::where('class_id', $class->id)

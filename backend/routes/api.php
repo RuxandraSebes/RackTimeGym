@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ClassCheckInController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DoorCheckInController;
 use App\Http\Controllers\EquipmentCheckInController;
 use App\Http\Controllers\EquipmentUnitController;
 use App\Http\Controllers\GymAccountController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\OccupancyController;
 use App\Http\Controllers\OccupancyHeatmapController;
 use App\Http\Controllers\ReservationController;
@@ -28,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:member')->group(function () {
         Route::post('/checkins/door/{token}', [DoorCheckInController::class, 'store']);
+        Route::post('/checkins/class/{token}', [ClassCheckInController::class, 'store']);
         Route::post('/checkins/equipment/{token}', [EquipmentCheckInController::class, 'store']);
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/classes/{class}/bookings', [BookingController::class, 'store']);
@@ -48,6 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/classes/{class}/cancel', [ClassController::class, 'cancel']);
         Route::get('/classes/{class}/qr', [ClassController::class, 'showQr']);
         Route::get('/classes/{class}/bookings', [BookingController::class, 'roster']);
+        Route::post('/gym/users/{member}/reactivate', [MembershipController::class, 'reactivate']);
+        Route::patch('/gym/users/{member}/cancellation-window', [MembershipController::class, 'updateCancellationWindow']);
         Route::post('/equipment-units', [EquipmentUnitController::class, 'store']);
         Route::get('/equipment-units/{equipmentUnit}/qr', [EquipmentUnitController::class, 'showQr']);
     });

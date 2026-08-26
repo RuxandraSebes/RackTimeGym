@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\MembershipStatus;
 use App\Enums\Role;
 use App\Models\Gym;
 use App\Models\User;
@@ -60,5 +61,15 @@ class UserFactory extends Factory
     public function owner(): static
     {
         return $this->state(['role' => Role::Owner]);
+    }
+
+    public function inactiveMembership(): static
+    {
+        return $this->state(['membership_status' => MembershipStatus::Inactive]);
+    }
+
+    public function cancellationWindow(int $minutes): static
+    {
+        return $this->state(['cancellation_window_minutes' => $minutes]);
     }
 }

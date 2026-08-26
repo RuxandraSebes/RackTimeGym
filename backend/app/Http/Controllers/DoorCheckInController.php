@@ -6,6 +6,7 @@ use App\Http\Requests\StoreManualCheckInRequest;
 use App\Http\Resources\CheckInResource;
 use App\Models\CheckIn;
 use App\Models\Gym;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,18 +25,22 @@ class DoorCheckInController extends Controller
 
         abort_unless($request->user()->gym_id === $gym->id, 403, 'This Door QR belongs to a different Gym.');
 
-        return $this->recordCheckIn($request->user()->id, $gym->id);
+        return $this->recordCheckIn($request->user(), $gym->id);
     }
 
     public function storeManual(StoreManualCheckInRequest $request): CheckInResource
     {
-        return $this->recordCheckIn($request->integer('user_id'), $request->user()->gym_id, $request->user()->id);
+        $member = User::findOrFail($request->integer('user_id'));
+
+        return $this->recordCheckIn($member, $request->user()->gym_id, $request->user()->id);
     }
 
-    private function recordCheckIn(int $userId, int $gymId, ?int $recordedById = null): CheckInResource
+    private function recordCheckIn(User $member, int $gymId, ?int $recordedById = null): CheckInResource
     {
+        abort_if(! $member->hasActiveMembership(), 403, 'This Membership is inactive.');
+
         $checkIn = CheckIn::create([
-            'user_id' => $userId,
+            'user_id' => $member->id,
             'gym_id' => $gymId,
             'recorded_by_id' => $recordedById,
         ]);
