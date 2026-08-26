@@ -13,6 +13,7 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\OccupancyController;
 use App\Http\Controllers\OccupancyHeatmapController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\UtilizationController;
 use App\Http\Controllers\WaitlistEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,5 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/gym/users/{member}/cancellation-window', [MembershipController::class, 'updateCancellationWindow']);
         Route::post('/equipment-units', [EquipmentUnitController::class, 'store']);
         Route::get('/equipment-units/{equipmentUnit}/qr', [EquipmentUnitController::class, 'showQr']);
+        Route::get('/gym/utilization', [UtilizationController::class, 'show']);
     });
 });
