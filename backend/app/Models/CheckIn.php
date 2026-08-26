@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'gym_id', 'recorded_by_id'])]
+#[Fillable(['user_id', 'gym_id', 'recorded_by_id', 'equipment_unit_id'])]
 class CheckIn extends Model
 {
     /** @use HasFactory<CheckInFactory> */
@@ -27,5 +27,10 @@ class CheckIn extends Model
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by_id');
+    }
+
+    public function equipmentUnit(): BelongsTo
+    {
+        return $this->belongsTo(EquipmentUnit::class);
     }
 }
