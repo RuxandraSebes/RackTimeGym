@@ -177,6 +177,46 @@ class UtilizationTest extends TestCase
         $this->assertEquals(0.0, $quietHour['utilization']);
     }
 
+    public function test_equipment_bookable_slots_exclude_hours_outside_a_partial_day_period(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        EquipmentUnit::factory()->for($gym)->create();
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/gym/utilization?'.http_build_query([
+            'from' => '2026-08-20T12:00:00+00:00',
+            'to' => '2026-08-20T17:59:59+00:00',
+        ]));
+
+        $entries = collect($response->json('equipment_units'));
+        $withinPeriod = $entries->whereBetween('hour', [12, 17]);
+        $outsidePeriod = $entries->reject(fn (array $e) => $e['hour'] >= 12 && $e['hour'] <= 17);
+
+        $this->assertTrue($withinPeriod->every(fn (array $e) => $e['bookable_slots'] === 2));
+        $this->assertTrue($outsidePeriod->every(fn (array $e) => $e['bookable_slots'] === 0));
+    }
+
+    public function test_equipment_bookable_slots_are_correct_for_a_period_spanning_midnight(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        EquipmentUnit::factory()->for($gym)->create();
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/gym/utilization?'.http_build_query([
+            'from' => '2026-08-20T23:00:00+00:00',
+            'to' => '2026-08-21T01:00:00+00:00',
+        ]));
+
+        $entries = collect($response->json('equipment_units'));
+        $hour23 = $entries->firstWhere('hour', 23);
+        $hour0 = $entries->firstWhere('hour', 0);
+        $hour12 = $entries->firstWhere('hour', 12);
+
+        $this->assertSame(2, $hour23['bookable_slots']);
+        $this->assertSame(2, $hour0['bookable_slots']);
+        $this->assertSame(0, $hour12['bookable_slots']);
+    }
+
     public function test_equipment_bookable_slots_scale_with_the_number_of_days_in_the_period(): void
     {
         $gym = Gym::factory()->create();

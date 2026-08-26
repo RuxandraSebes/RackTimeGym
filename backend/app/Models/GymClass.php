@@ -167,6 +167,21 @@ class GymClass extends Model
     }
 
     /**
+     * Actual usage of this Class, based on Check-ins rather than Bookings —
+     * a fully booked Class with heavy no-shows isn't actually utilized.
+     *
+     * @return Attribute<float, never>
+     */
+    protected function utilization(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->capacity > 0
+                ? round(($this->check_ins_count ?? $this->checkIns()->count()) / $this->capacity, 4)
+                : 0.0,
+        );
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
