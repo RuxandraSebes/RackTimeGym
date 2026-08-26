@@ -17,6 +17,7 @@ class ClassController extends Controller
             GymClass::where('gym_id', $request->user()->gym_id)
                 ->whereNull('cancelled_at')
                 ->where('starts_at', '>', now())
+                ->withCount(['bookings as active_bookings_count' => fn ($query) => $query->whereNull('cancelled_at')])
                 ->orderBy('starts_at')
                 ->get()
         );

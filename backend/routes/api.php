@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DoorCheckInController;
 use App\Http\Controllers\GymAccountController;
@@ -22,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:member')->group(function () {
         Route::post('/checkins/door/{token}', [DoorCheckInController::class, 'store']);
+        Route::get('/bookings', [BookingController::class, 'index']);
+        Route::post('/classes/{class}/bookings', [BookingController::class, 'store']);
+        Route::delete('/bookings/{booking}', [BookingController::class, 'destroy']);
     });
 
     Route::middleware('role:staff,owner')->group(function () {
@@ -33,5 +37,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/classes/{class}', [ClassController::class, 'update']);
         Route::post('/classes/{class}/cancel', [ClassController::class, 'cancel']);
         Route::get('/classes/{class}/qr', [ClassController::class, 'showQr']);
+        Route::get('/classes/{class}/bookings', [BookingController::class, 'roster']);
     });
 });
