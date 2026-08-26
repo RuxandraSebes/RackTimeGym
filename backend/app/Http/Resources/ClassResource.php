@@ -18,8 +18,7 @@ class ClassResource extends JsonResource
             'name' => $this->name,
             'starts_at' => $this->starts_at->toIso8601String(),
             'capacity' => $this->capacity,
-            // Bookings aren't tracked until #7 lands, so the full capacity is always available for now.
-            'remaining_capacity' => $this->capacity,
+            'remaining_capacity' => $this->remaining_capacity,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
         ];
     }
