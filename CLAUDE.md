@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues are tracked in Linear; GitHub hosts code only (no GitHub Issues). See `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues on RuxandraSebes/RackTimeGym. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 

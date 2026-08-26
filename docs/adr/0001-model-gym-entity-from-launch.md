@@ -1,0 +1,3 @@
+# Model Gym as a scoping entity from launch, even with only one row
+
+RackTime launches with a single gym, but the business plans to onboard more gyms later. We modeled `Gym` as a first-class entity from day one — Members, Staff, Classes, and Equipment Units all scope to a `Gym` — rather than building v1 as an implicit single-tenant app and retrofitting scoping later. Retrofitting tenant scoping onto every table after the fact (adding foreign keys, backfilling existing rows, auditing every query for missing scope filters) is a much larger and riskier job than carrying an always-populated `gym_id` from the start.
