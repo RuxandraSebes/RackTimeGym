@@ -47,6 +47,37 @@ class EquipmentReservationTest extends TestCase
         $this->assertDatabaseCount('reservations', 1);
     }
 
+    public function test_member_cannot_reserve_a_slot_that_overlaps_an_existing_reservation_at_a_different_start_time(): void
+    {
+        $gym = Gym::factory()->create();
+        $unit = EquipmentUnit::factory()->for($gym)->create();
+        Reservation::factory()->for($unit, 'equipmentUnit')->create(['starts_at' => now()->addHour()]);
+        $member = User::factory()->member()->for($gym)->create();
+
+        $response = $this->actingAs($member, 'sanctum')->postJson("/api/equipment-units/{$unit->id}/reservations", [
+            'starts_at' => now()->addHour()->addMinutes(15)->toIso8601String(),
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('reservations', 1);
+    }
+
+    public function test_member_can_reserve_the_back_to_back_slot_right_after_an_existing_reservation(): void
+    {
+        $gym = Gym::factory()->create();
+        $unit = EquipmentUnit::factory()->for($gym)->create();
+        $firstSlot = now()->addHour();
+        Reservation::factory()->for($unit, 'equipmentUnit')->create(['starts_at' => $firstSlot]);
+        $member = User::factory()->member()->for($gym)->create();
+
+        $response = $this->actingAs($member, 'sanctum')->postJson("/api/equipment-units/{$unit->id}/reservations", [
+            'starts_at' => $firstSlot->copy()->addMinutes(30)->toIso8601String(),
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseCount('reservations', 2);
+    }
+
     public function test_member_can_reserve_a_different_slot_on_the_same_unit(): void
     {
         $gym = Gym::factory()->create();

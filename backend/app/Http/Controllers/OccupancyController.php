@@ -14,6 +14,7 @@ class OccupancyController extends Controller
     {
         $count = CheckIn::query()
             ->where('gym_id', $request->user()->gym_id)
+            ->door()
             ->where('created_at', '>', now()->subMinutes(self::PRESENCE_WINDOW_MINUTES))
             ->distinct()
             ->count('user_id');

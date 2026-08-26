@@ -33,8 +33,7 @@ class ReservationController extends Controller
             $unit = EquipmentUnit::whereKey($equipmentUnit->id)->lockForUpdate()->firstOrFail();
 
             $slotTaken = Reservation::where('equipment_unit_id', $unit->id)
-                ->where('starts_at', $startsAt)
-                ->active()
+                ->overlapping($startsAt)
                 ->exists();
             abort_if($slotTaken, 422, 'This slot is already reserved.');
 

@@ -20,9 +20,7 @@ class EquipmentCheckInController extends Controller
         DB::transaction(function () use ($request, $unit) {
             $reservation = Reservation::where('equipment_unit_id', $unit->id)
                 ->where('user_id', $request->user()->id)
-                ->whereNull('confirmed_at')
-                ->where('starts_at', '<=', now())
-                ->where('starts_at', '>', now()->subMinutes(Reservation::CHECKIN_GRACE_MINUTES))
+                ->checkable()
                 ->lockForUpdate()
                 ->first();
 

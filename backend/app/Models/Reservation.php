@@ -42,6 +42,29 @@ class Reservation extends Model
     }
 
     /**
+     * Any active Reservation whose 30-minute slot overlaps the given start
+     * time on the same Equipment Unit — the set a new Reservation there
+     * would collide with.
+     */
+    public function scopeOverlapping(Builder $query, Carbon $startsAt): Builder
+    {
+        return $query->active()
+            ->where('starts_at', '>', $startsAt->copy()->subMinutes(self::SLOT_MINUTES))
+            ->where('starts_at', '<', $startsAt->copy()->addMinutes(self::SLOT_MINUTES));
+    }
+
+    /**
+     * Unconfirmed and currently within the grace window a Member has to
+     * check in and confirm it after the slot starts.
+     */
+    public function scopeCheckable(Builder $query): Builder
+    {
+        return $query->whereNull('confirmed_at')
+            ->where('starts_at', '<=', now())
+            ->where('starts_at', '>', now()->subMinutes(self::CHECKIN_GRACE_MINUTES));
+    }
+
+    /**
      * @return Attribute<Carbon, never>
      */
     protected function endsAt(): Attribute

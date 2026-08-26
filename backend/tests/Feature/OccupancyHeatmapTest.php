@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CheckIn;
+use App\Models\EquipmentUnit;
 use App\Models\Gym;
 use App\Models\User;
 use Carbon\Carbon;
@@ -116,6 +117,25 @@ class OccupancyHeatmapTest extends TestCase
         $otherGymMember = User::factory()->member()->for($otherGym)->create();
 
         CheckIn::factory()->for($otherGymMember, 'member')->for($otherGym)->create([
+            'created_at' => Carbon::parse('2026-01-06 07:00:00'),
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/gym/occupancy/heatmap');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertTrue(collect($data)->every(fn (array $bucket) => $bucket['count'] === 0));
+    }
+
+    public function test_heatmap_excludes_equipment_check_ins(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        $member = User::factory()->member()->for($gym)->create();
+        $unit = EquipmentUnit::factory()->for($gym)->create();
+
+        CheckIn::factory()->for($member, 'member')->for($gym)->create([
+            'equipment_unit_id' => $unit->id,
             'created_at' => Carbon::parse('2026-01-06 07:00:00'),
         ]);
 

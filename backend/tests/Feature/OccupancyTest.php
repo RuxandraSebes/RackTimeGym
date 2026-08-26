@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CheckIn;
+use App\Models\EquipmentUnit;
 use App\Models\Gym;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -126,6 +127,23 @@ class OccupancyTest extends TestCase
         $otherGymMember = User::factory()->member()->for($otherGym)->create();
 
         CheckIn::factory()->for($otherGymMember, 'member')->for($otherGym)->create([
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/gym/occupancy');
+
+        $response->assertOk()->assertJson(['count' => 0]);
+    }
+
+    public function test_occupancy_excludes_equipment_check_ins(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        $member = User::factory()->member()->for($gym)->create();
+        $unit = EquipmentUnit::factory()->for($gym)->create();
+
+        CheckIn::factory()->for($member, 'member')->for($gym)->create([
+            'equipment_unit_id' => $unit->id,
             'created_at' => now()->subMinutes(10),
         ]);
 
