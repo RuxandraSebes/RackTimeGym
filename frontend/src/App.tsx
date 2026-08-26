@@ -1,64 +1,44 @@
-import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { fetchHealth } from '@/lib/health'
+import { AppShell } from '@/components/AppShell'
+import { MemberLanding } from '@/components/dashboards/MemberLanding'
+import { OwnerLanding } from '@/components/dashboards/OwnerLanding'
+import { StaffLanding } from '@/components/dashboards/StaffLanding'
+import { LoginForm } from '@/components/LoginForm'
+import { AuthProvider, useAuth } from '@/lib/auth'
 
-type CheckState =
-  | { phase: 'loading' }
-  | { phase: 'connected' }
-  | { phase: 'error'; message: string }
+function Landing({ role }: { role: 'member' | 'staff' | 'owner' }) {
+  switch (role) {
+    case 'staff':
+      return <StaffLanding />
+    case 'owner':
+      return <OwnerLanding />
+    default:
+      return <MemberLanding />
+  }
+}
 
-function App() {
-  const [state, setState] = useState<CheckState>({ phase: 'loading' })
+function AppContent() {
+  const { state, logout } = useAuth()
 
-  useEffect(() => {
-    let cancelled = false
+  if (state.phase === 'loading') {
+    return <main className="flex min-h-svh items-center justify-center p-6 text-muted-foreground">Loading…</main>
+  }
 
-    fetchHealth()
-      .then((health) => {
-        if (cancelled) return
-        setState(
-          health.database === 'connected'
-            ? { phase: 'connected' }
-            : { phase: 'error', message: 'Backend cannot reach the database.' },
-        )
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return
-        const message = error instanceof Error ? error.message : 'Unknown error'
-        setState({ phase: 'error', message })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  if (state.phase === 'signed-out') {
+    return <LoginForm />
+  }
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-6">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>RackTimeGym</CardTitle>
-          <CardDescription>Backend connectivity check</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {state.phase === 'loading' && <Badge variant="secondary">Checking…</Badge>}
-          {state.phase === 'connected' && <Badge>Connected</Badge>}
-          {state.phase === 'error' && (
-            <div className="flex flex-col gap-2">
-              <Badge variant="destructive">Not connected</Badge>
-              <p className="text-muted-foreground text-sm">{state.message}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+    <AppShell user={state.user} onLogout={logout}>
+      <Landing role={state.user.role} />
+    </AppShell>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

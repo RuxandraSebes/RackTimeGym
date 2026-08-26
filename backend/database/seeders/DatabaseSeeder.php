@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Gym;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,11 +16,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $gym = Gym::factory()->create(['name' => 'RackTime Gym']);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        User::factory()->owner()->create([
+            'name' => 'Olivia Owner',
+            'email' => 'owner@racktimegym.test',
+            'gym_id' => $gym->id,
+        ]);
+
+        User::factory()->staff()->create([
+            'name' => 'Sam Staff',
+            'email' => 'staff@racktimegym.test',
+            'gym_id' => $gym->id,
+        ]);
+
+        User::factory()->member()->create([
+            'name' => 'Mia Member',
+            'email' => 'member@racktimegym.test',
+            'gym_id' => $gym->id,
         ]);
     }
 }
