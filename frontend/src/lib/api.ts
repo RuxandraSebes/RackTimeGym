@@ -128,3 +128,48 @@ export type OccupancyHeatmap = {
 export function fetchOccupancyHeatmap(token: string): Promise<OccupancyHeatmap> {
   return request<OccupancyHeatmap>('/gym/occupancy/heatmap', {}, token)
 }
+
+export type GymClass = {
+  id: number
+  gym_id: number
+  name: string
+  starts_at: string
+  capacity: number
+  remaining_capacity: number
+  cancelled_at: string | null
+}
+
+export type ClassInput = { name: string; starts_at: string; capacity: number }
+
+export async function fetchUpcomingClasses(token: string): Promise<GymClass[]> {
+  const { data } = await request<{ data: GymClass[] }>('/classes', {}, token)
+  return data
+}
+
+export async function createClass(token: string, input: ClassInput): Promise<GymClass> {
+  const { data } = await request<{ data: GymClass }>(
+    '/classes',
+    { method: 'POST', body: JSON.stringify(input) },
+    token,
+  )
+  return data
+}
+
+export async function updateClass(token: string, id: number, input: ClassInput): Promise<GymClass> {
+  const { data } = await request<{ data: GymClass }>(
+    `/classes/${id}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    token,
+  )
+  return data
+}
+
+export async function cancelClass(token: string, id: number): Promise<GymClass> {
+  const { data } = await request<{ data: GymClass }>(`/classes/${id}/cancel`, { method: 'POST' }, token)
+  return data
+}
+
+export async function fetchClassQrToken(token: string, id: number): Promise<string> {
+  const { qr_token } = await request<{ qr_token: string }>(`/classes/${id}/qr`, {}, token)
+  return qr_token
+}

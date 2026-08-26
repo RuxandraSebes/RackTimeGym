@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DoorCheckInController;
 use App\Http\Controllers\GymAccountController;
 use App\Http\Controllers\HealthController;
@@ -17,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/gym/occupancy', [OccupancyController::class, 'show']);
     Route::get('/gym/occupancy/heatmap', [OccupancyHeatmapController::class, 'show']);
+    Route::get('/classes', [ClassController::class, 'index']);
 
     Route::middleware('role:member')->group(function () {
         Route::post('/checkins/door/{token}', [DoorCheckInController::class, 'store']);
@@ -27,5 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/gym/users', [GymAccountController::class, 'store']);
         Route::get('/gym/door-qr', [DoorCheckInController::class, 'show']);
         Route::post('/gym/checkins', [DoorCheckInController::class, 'storeManual']);
+        Route::post('/classes', [ClassController::class, 'store']);
+        Route::patch('/classes/{class}', [ClassController::class, 'update']);
+        Route::post('/classes/{class}/cancel', [ClassController::class, 'cancel']);
+        Route::get('/classes/{class}/qr', [ClassController::class, 'showQr']);
     });
 });
