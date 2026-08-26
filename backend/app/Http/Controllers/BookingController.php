@@ -83,19 +83,27 @@ class BookingController extends Controller
     public function destroy(Request $request, Booking $booking): BookingResource
     {
         abort_unless($booking->user_id === $request->user()->id, 403, 'This Booking belongs to a different Member.');
-        abort_if($booking->cancelled_at !== null, 422, 'This Booking has already been cancelled.');
 
         $member = $request->user();
-        $class = $booking->gymClass;
-        $isLateCancellation = now()->greaterThanOrEqualTo($class->cancellationDeadlineFor($member));
 
-        $booking->update(['cancelled_at' => now()]);
+        $booking = DB::transaction(function () use ($booking, $member) {
+            $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
-        if ($isLateCancellation) {
-            $member->recordStrike($booking, StrikeReason::LateCancellation);
-        }
+            abort_if($booking->cancelled_at !== null, 422, 'This Booking has already been cancelled.');
 
-        $class->settleWaitlist();
+            $class = $booking->gymClass;
+            $isLateCancellation = now()->greaterThanOrEqualTo($class->cancellationDeadlineFor($member));
+
+            $booking->update(['cancelled_at' => now()]);
+
+            if ($isLateCancellation) {
+                $member->recordStrike($booking, StrikeReason::LateCancellation);
+            }
+
+            $class->settleWaitlist();
+
+            return $booking;
+        });
 
         return new BookingResource($booking->load('gymClass'));
     }

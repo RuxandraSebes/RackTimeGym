@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'role', 'gym_id', 'cancellation_window_minutes', 'membership_status', 'membership_reactivated_at'])]
@@ -70,16 +71,20 @@ class User extends Authenticatable
      */
     public function recordStrike(Booking $booking, StrikeReason $reason): Strike
     {
-        $strike = $this->strikes()->create([
-            'booking_id' => $booking->id,
-            'reason' => $reason,
-        ]);
+        return DB::transaction(function () use ($booking, $reason) {
+            $member = self::whereKey($this->id)->lockForUpdate()->firstOrFail();
 
-        if ($this->hasActiveMembership() && $this->activeStrikeCount() >= self::STRIKES_BEFORE_SUSPENSION) {
-            $this->update(['membership_status' => MembershipStatus::Inactive]);
-        }
+            $strike = $member->strikes()->create([
+                'booking_id' => $booking->id,
+                'reason' => $reason,
+            ]);
 
-        return $strike;
+            if ($member->hasActiveMembership() && $member->activeStrikeCount() >= self::STRIKES_BEFORE_SUSPENSION) {
+                $member->update(['membership_status' => MembershipStatus::Inactive]);
+            }
+
+            return $strike;
+        });
     }
 
     /**

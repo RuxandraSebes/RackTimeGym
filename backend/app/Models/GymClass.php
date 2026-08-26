@@ -76,6 +76,10 @@ class GymClass extends Model
      */
     public function settleNoShowStrikes(): void
     {
+        if ($this->cancelled_at !== null) {
+            return;
+        }
+
         if (now()->lessThanOrEqualTo($this->starts_at->copy()->addMinutes(self::NO_SHOW_SETTLEMENT_GRACE_MINUTES))) {
             return;
         }

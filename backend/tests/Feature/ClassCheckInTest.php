@@ -106,4 +106,23 @@ class ClassCheckInTest extends TestCase
 
         $response->assertOk()->assertJson(['count' => 0]);
     }
+
+    public function test_checking_in_settles_no_show_strikes_for_other_members_of_the_ended_class(): void
+    {
+        $gym = Gym::factory()->create();
+        $class = GymClass::factory()->for($gym)->create(['starts_at' => now()->subHours(3)]);
+        $attendee = User::factory()->member()->for($gym)->create();
+        $noShow = User::factory()->member()->for($gym)->create();
+        Booking::factory()->for($class, 'gymClass')->for($attendee, 'member')->create();
+        $noShowBooking = Booking::factory()->for($class, 'gymClass')->for($noShow, 'member')->create();
+
+        $this->actingAs($attendee, 'sanctum')->postJson("/api/checkins/class/{$class->qr_token}")->assertCreated();
+
+        $this->assertDatabaseHas('strikes', [
+            'user_id' => $noShow->id,
+            'booking_id' => $noShowBooking->id,
+            'reason' => 'missed_check_in',
+        ]);
+        $this->assertDatabaseMissing('strikes', ['user_id' => $attendee->id]);
+    }
 }

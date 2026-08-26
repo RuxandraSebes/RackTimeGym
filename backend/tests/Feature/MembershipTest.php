@@ -60,6 +60,19 @@ class MembershipTest extends TestCase
         $this->assertDatabaseCount('strikes', 0);
     }
 
+    public function test_a_cancelled_class_does_not_record_no_show_strikes_for_its_bookings(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        $member = User::factory()->member()->for($gym)->create();
+        $class = GymClass::factory()->cancelled()->for($gym)->create(['starts_at' => now()->subHours(3)]);
+        Booking::factory()->for($class, 'gymClass')->for($member, 'member')->create();
+
+        $this->actingAs($staff, 'sanctum')->getJson("/api/classes/{$class->id}/bookings")->assertOk();
+
+        $this->assertDatabaseCount('strikes', 0);
+    }
+
     public function test_settlement_does_not_record_a_duplicate_strike_for_the_same_booking(): void
     {
         $gym = Gym::factory()->create();

@@ -28,6 +28,10 @@ class ClassCheckInController extends Controller
             'class_id' => $class->id,
         ]);
 
+        // Settled after recording this Check-in, so this scan never counts against
+        // its own Member; a natural extra trigger point alongside the roster view.
+        $class->settleNoShowStrikes();
+
         return new CheckInResource($checkIn->load('member'));
     }
 }
