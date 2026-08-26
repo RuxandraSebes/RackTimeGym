@@ -1,3 +1,4 @@
+import { ClassesPanel } from '@/components/ClassesPanel'
 import { DoorQrPanel } from '@/components/DoorQrPanel'
 import { GymAccountsPanel } from '@/components/GymAccountsPanel'
 import { ManualCheckInPanel } from '@/components/ManualCheckInPanel'
@@ -18,6 +19,7 @@ export function OwnerLanding() {
       <OccupancyHeatmapPanel />
       <DoorQrPanel />
       <ManualCheckInPanel />
+      <ClassesPanel />
       <GymAccountsPanel creatableRoles={['member', 'staff', 'owner']} />
     </div>
   )
