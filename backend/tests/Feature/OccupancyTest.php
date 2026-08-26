@@ -105,6 +105,19 @@ class OccupancyTest extends TestCase
         $response->assertOk()->assertJson(['count' => 1]);
     }
 
+    public function test_occupancy_excludes_a_check_in_exactly_90_minutes_old(): void
+    {
+        $gym = Gym::factory()->create();
+        $staff = User::factory()->staff()->for($gym)->create();
+        $member = User::factory()->member()->for($gym)->create();
+
+        CheckIn::factory()->for($member, 'member')->for($gym)->create(['created_at' => now()->subMinutes(90)]);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/gym/occupancy');
+
+        $response->assertOk()->assertJson(['count' => 0]);
+    }
+
     public function test_occupancy_is_scoped_to_the_requesting_users_gym(): void
     {
         $gym = Gym::factory()->create();
