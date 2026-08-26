@@ -18,6 +18,7 @@ class ClassController extends Controller
                 ->whereNull('cancelled_at')
                 ->where('starts_at', '>', now())
                 ->withCount(['bookings as active_bookings_count' => fn ($query) => $query->whereNull('cancelled_at')])
+                ->withCount('activeWaitlistOffers')
                 ->orderBy('starts_at')
                 ->get()
         );
