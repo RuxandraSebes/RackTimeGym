@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,8 @@ class UserResource extends JsonResource
                 'id' => $this->gym->id,
                 'name' => $this->gym->name,
             ]),
+            'cancellation_window_minutes' => $this->when($this->role === Role::Member, $this->cancellation_window_minutes),
+            'membership_status' => $this->when($this->role === Role::Member, $this->membership_status?->value),
         ];
     }
 }

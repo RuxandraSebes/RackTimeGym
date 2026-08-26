@@ -14,6 +14,7 @@ class OccupancyHeatmapController extends Controller
 
         CheckIn::query()
             ->where('gym_id', $request->user()->gym_id)
+            ->whereNull('class_id')
             ->get(['created_at'])
             ->each(function (CheckIn $checkIn) use (&$counts) {
                 $counts[$checkIn->created_at->dayOfWeek][$checkIn->created_at->hour]++;

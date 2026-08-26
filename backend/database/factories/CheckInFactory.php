@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\CheckIn;
 use App\Models\Gym;
+use App\Models\GymClass;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,5 +24,13 @@ class CheckInFactory extends Factory
             'user_id' => User::factory()->member(),
             'gym_id' => Gym::factory(),
         ];
+    }
+
+    public function forClass(GymClass $class): static
+    {
+        return $this->state([
+            'gym_id' => $class->gym_id,
+            'class_id' => $class->id,
+        ]);
     }
 }

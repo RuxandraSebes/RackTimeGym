@@ -2,32 +2,27 @@
 
 namespace App\Models;
 
-use Database\Factories\BookingFactory;
+use App\Enums\StrikeReason;
+use Database\Factories\StrikeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['class_id', 'user_id', 'cancelled_at'])]
-class Booking extends Model
+#[Fillable(['user_id', 'booking_id', 'reason'])]
+class Strike extends Model
 {
-    /** @use HasFactory<BookingFactory> */
+    /** @use HasFactory<StrikeFactory> */
     use HasFactory;
-
-    public function gymClass(): BelongsTo
-    {
-        return $this->belongsTo(GymClass::class, 'class_id');
-    }
 
     public function member(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function strikes(): HasMany
+    public function booking(): BelongsTo
     {
-        return $this->hasMany(Strike::class);
+        return $this->belongsTo(Booking::class);
     }
 
     /**
@@ -36,7 +31,7 @@ class Booking extends Model
     protected function casts(): array
     {
         return [
-            'cancelled_at' => 'datetime',
+            'reason' => StrikeReason::class,
         ];
     }
 }
