@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['name'])]
+#[Fillable(['name', 'cancellation_window_minutes'])]
 class Gym extends Model
 {
     /** @use HasFactory<GymFactory> */

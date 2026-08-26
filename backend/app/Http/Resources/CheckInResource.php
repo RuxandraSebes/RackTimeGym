@@ -15,6 +15,7 @@ class CheckInResource extends JsonResource
         return [
             'id' => $this->id,
             'gym_id' => $this->gym_id,
+            'class_id' => $this->class_id,
             'member' => $this->whenLoaded('member', fn () => [
                 'id' => $this->member->id,
                 'name' => $this->member->name,
